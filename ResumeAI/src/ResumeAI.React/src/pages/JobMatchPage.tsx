@@ -11,6 +11,7 @@ export default function JobMatchPage() {
   const [resumeId, setResumeId] = useState('')
   const [keywords, setKeywords] = useState('Software Engineer')
   const [jobs, setJobs] = useState<JobMatch[]>([])
+  const [hasSearched, setHasSearched] = useState(false)
   const [matches, setMatches] = useState<JobMatch[]>([])
   const [activeMatch, setActiveMatch] = useState<JobMatch | null>(null)
   const [recs, setRecs] = useState<string>('')
@@ -51,11 +52,12 @@ export default function JobMatchPage() {
     if (!resumeId) { setErr('Please select a base resume for keywords.'); return }
     const results = await jobMatchApi.fetchLinkedIn(Number(resumeId), keywords)
     setJobs(results)
+    setHasSearched(true)
     return results
   })
 
   const loadHistory = () => run(async () => { const d = await jobMatchApi.getMyMatches(); setMatches(d); return d })
-  const loadTop = () => run(async () => { const d = await jobMatchApi.getTop(75); setMatches(d); return d })
+  const loadTop = () => run(async () => { const d = await jobMatchApi.getTop(60); setMatches(d); return d })
 
   const startAnalysis = (job: JobMatch) => {
     setPendingJob(job)
@@ -159,21 +161,55 @@ export default function JobMatchPage() {
               </div>
             </div>
 
-            {jobs.length > 0 && (
+            {jobs.length > 0 ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
                 {jobs.map((j, idx) => (
                   <JobCard key={idx} job={j} onAnalyze={() => startAnalysis(j)} />
                 ))}
               </div>
-            )}
+            ) : hasSearched && !busy ? (
+              <div style={{ ...card, textAlign: 'center', padding: '3rem 2rem', border: '2px dashed var(--color-frost)', background: 'rgba(255, 255, 255, 0.5)', boxShadow: 'none' }}>
+                <div style={{ fontSize: '2.5rem', marginBottom: '1rem', opacity: 0.8 }}>🔍</div>
+                <h3 style={{ margin: '0 0 0.5rem', color: 'var(--color-depth)', fontWeight: 800 }}>No Jobs Found</h3>
+                <p style={{ margin: 0, color: 'var(--color-marine)', fontWeight: 500 }}>
+                  We couldn't find any roles matching "{keywords}". Try adjusting your search terms.
+                </p>
+              </div>
+            ) : null}
           </div>
         )}
 
         {tab !== 'find' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-            {matches.map(m => (
-              <MatchItem key={m.matchId} match={m} active={activeMatch} busy={busy} recs={recs} onRecs={loadRecs} />
-            ))}
+            {matches.length > 0 ? (
+              matches.map(m => (
+                <MatchItem key={m.matchId} match={m} active={activeMatch} busy={busy} recs={recs} onRecs={loadRecs} />
+              ))
+            ) : !busy ? (
+              <div style={{ ...card, textAlign: 'center', padding: '4rem 2rem', border: '2px dashed var(--color-frost)', background: 'rgba(255, 255, 255, 0.5)', boxShadow: 'none' }}>
+                <div style={{ fontSize: '3rem', marginBottom: '1rem', opacity: 0.8 }}>📭</div>
+                <h3 style={{ margin: '0 0 0.5rem', color: 'var(--color-depth)', fontWeight: 800 }}>
+                  {tab === 'history' ? 'No Analyses Yet' : 'No Top Matches'}
+                </h3>
+                <p style={{ margin: 0, color: 'var(--color-marine)', fontWeight: 500 }}>
+                  {tab === 'history' 
+                    ? "You haven't analyzed any jobs yet. Switch to 'Find Opportunities' to get started."
+                    : "You don't have any high-scoring job matches yet. Only matches with a score of 60% or higher will appear here."}
+                </p>
+                {tab === 'history' && (
+                  <button 
+                    style={{ ...btn('var(--color-harbor)'), marginTop: '1.5rem', padding: '0.75rem 2rem' }}
+                    onClick={() => setTab('find')}
+                  >
+                    Find Opportunities
+                  </button>
+                )}
+              </div>
+            ) : (
+              <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--color-marine)', fontWeight: 600 }}>
+                Loading...
+              </div>
+            )}
           </div>
         )}
       </div>
