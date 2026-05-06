@@ -4,8 +4,10 @@ import type {
   AiRequest, AiQuota, ExportJob, JobMatch,
 } from '../types'
 
-// All traffic goes through the YARP gateway → vite proxy strips CORS
-const http = axios.create({ baseURL: '/api' })
+// Use environment variable for API URL if deployed separately, otherwise fallback to relative proxy
+const http = axios.create({ 
+  baseURL: import.meta.env.VITE_API_BASE_URL || '/api' 
+})
 
 // Attach JWT from localStorage on every request
 http.interceptors.request.use(cfg => {
