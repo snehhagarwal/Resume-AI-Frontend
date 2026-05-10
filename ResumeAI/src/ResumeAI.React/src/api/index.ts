@@ -82,7 +82,10 @@ export const authApi = {
     http.put(`/auth/users/${id}/subscription`, { plan }),
 
   // OAuth — browser redirect, not axios
-  googleLogin:   () => { window.location.href = '/api/auth/oauth/google' },
+  googleLogin:   () => { 
+    const baseUrl = import.meta.env.VITE_API_BASE_URL || '';
+    window.location.href = `${baseUrl}/api/auth/oauth/google`;
+  },
 }
 
 // ─── Templates ────────────────────────────────────────────────────────────────
