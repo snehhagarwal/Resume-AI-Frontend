@@ -13,6 +13,13 @@ const http = axios.create({
 http.interceptors.request.use(cfg => {
   const token = localStorage.getItem('token')
   if (token) cfg.headers.Authorization = `Bearer ${token}`
+  
+  // Fix: Axios drops paths from the baseURL if the endpoint starts with a slash.
+  // We force /api here so the Gateway catches it.
+  if (cfg.baseURL && cfg.baseURL.startsWith('http') && cfg.url?.startsWith('/')) {
+    cfg.url = `/api${cfg.url}`
+  }
+  
   return cfg
 })
 
