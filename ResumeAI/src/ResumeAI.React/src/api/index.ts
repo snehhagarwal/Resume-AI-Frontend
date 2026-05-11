@@ -221,12 +221,14 @@ export const exportApi = {
   getStats:     (): Promise<Record<string, number>> => http.get('/exports/stats').then(r => r.data.data),
   download: (jobId: string) => {
     const token = localStorage.getItem('token')
-    const url = `/api/exports/${jobId}/download?access_token=${encodeURIComponent(token || '')}`
+    const baseUrl = import.meta.env.VITE_API_BASE_URL || ''
+    const url = `${baseUrl}/api/exports/${jobId}/download?access_token=${encodeURIComponent(token || '')}`
     window.open(url, '_blank')
   },
   downloadUrl: (jobId: string) => {
     const token = localStorage.getItem('token')
-    return `/api/exports/${jobId}/download?access_token=${encodeURIComponent(token || '')}`
+    const baseUrl = import.meta.env.VITE_API_BASE_URL || ''
+    return `${baseUrl}/api/exports/${jobId}/download?access_token=${encodeURIComponent(token || '')}`
   },
   delete:       (jobId: string) => http.delete(`/exports/${jobId}`),
 }
