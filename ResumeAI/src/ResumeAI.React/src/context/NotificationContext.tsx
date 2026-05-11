@@ -134,8 +134,9 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!token) return
 
+    const baseUrl = import.meta.env.VITE_API_BASE_URL || ''
     const hub = new signalR.HubConnectionBuilder()
-      .withUrl('/hubs/notifications', {
+      .withUrl(`${baseUrl}/hubs/notifications`, {
         accessTokenFactory: () => token,
         transport: signalR.HttpTransportType.WebSockets |
                    signalR.HttpTransportType.ServerSentEvents |
