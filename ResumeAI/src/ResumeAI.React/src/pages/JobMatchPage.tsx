@@ -169,7 +169,6 @@ export default function JobMatchPage() {
               </div>
             ) : hasSearched && !busy ? (
               <div style={{ ...card, textAlign: 'center', padding: '3rem 2rem', border: '2px dashed var(--color-frost)', background: 'rgba(255, 255, 255, 0.5)', boxShadow: 'none' }}>
-                <div style={{ fontSize: '2.5rem', marginBottom: '1rem', opacity: 0.8 }}>🔍</div>
                 <h3 style={{ margin: '0 0 0.5rem', color: 'var(--color-depth)', fontWeight: 800 }}>No Jobs Found</h3>
                 <p style={{ margin: 0, color: 'var(--color-marine)', fontWeight: 500 }}>
                   We couldn't find any roles matching "{keywords}". Try adjusting your search terms.

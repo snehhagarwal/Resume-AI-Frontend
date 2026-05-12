@@ -8,6 +8,7 @@ export default function UserManagementPage() {
   const [loading, setLoading] = useState(true)
   const [err, setErr] = useState('')
   const [filter, setFilter] = useState<'ALL' | 'USER' | 'ADMIN'>('ALL')
+  const [search, setSearch] = useState('')
 
   const fetchUsers = useCallback(async () => {
     setLoading(true)
@@ -76,7 +77,12 @@ export default function UserManagementPage() {
     }
   }
 
-  const filteredUsers = users.filter(u => filter === 'ALL' || u.role === filter)
+  const filteredUsers = users.filter(u => {
+    const matchesFilter = filter === 'ALL' || u.role === filter
+    const matchesSearch = u.fullName.toLowerCase().includes(search.toLowerCase()) || 
+                         u.email.toLowerCase().includes(search.toLowerCase())
+    return matchesFilter && matchesSearch
+  })
 
   return (
     <div style={{ maxWidth: 1200, margin: '0 auto' }}>
@@ -90,29 +96,49 @@ export default function UserManagementPage() {
 
       {err && <div style={errBox}>{err}</div>}
 
-      <div style={{...card, padding: '1.5rem', marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
-        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-          <span style={{ fontWeight: 700, color: 'var(--color-harbor)', marginRight: '0.5rem', fontSize: '0.9rem' }}>FILTER BY ROLE:</span>
-          {(['ALL', 'USER', 'ADMIN'] as const).map(f => (
-            <button 
-              key={f}
-              onClick={() => setFilter(f)}
+      <div style={{...card, padding: '1.5rem', marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '2rem'}}>
+        <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center', flex: 1 }}>
+          <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+            <span style={{ fontWeight: 700, color: 'var(--color-harbor)', marginRight: '0.5rem', fontSize: '0.9rem' }}>ROLE:</span>
+            {(['ALL', 'USER', 'ADMIN'] as const).map(f => (
+              <button 
+                key={f}
+                onClick={() => setFilter(f)}
+                style={{
+                  padding: '0.5rem 1.5rem',
+                  borderRadius: '10px',
+                  background: filter === f ? 'var(--color-harbor)' : 'var(--color-frost)',
+                  color: filter === f ? 'white' : 'var(--color-harbor)',
+                  fontWeight: 600,
+                  fontSize: '0.85rem',
+                  transition: 'all 0.2s'
+                }}
+              >
+                {f}
+              </button>
+            ))}
+          </div>
+
+          <div style={{ position: 'relative', flex: 1, maxWidth: '400px' }}>
+            <input 
+              type="text" 
+              placeholder="Search by name or email..." 
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
               style={{
-                padding: '0.5rem 1.5rem',
-                borderRadius: '10px',
-                background: filter === f ? 'var(--color-harbor)' : 'var(--color-frost)',
-                color: filter === f ? 'white' : 'var(--color-harbor)',
+                width: '100%',
+                padding: '0.6rem 1rem',
+                borderRadius: '12px',
+                border: '1.5px solid var(--color-frost)',
+                fontSize: '0.9rem',
                 fontWeight: 600,
-                fontSize: '0.85rem',
-                transition: 'all 0.2s'
+                outline: 'none'
               }}
-            >
-              {f}
-            </button>
-          ))}
+            />
+          </div>
         </div>
-        <div style={{ color: 'var(--color-marine)', fontWeight: 500 }}>
-          Total Users: <span style={{ color: 'var(--color-harbor)', fontWeight: 700 }}>{filteredUsers.length}</span>
+        <div style={{ color: 'var(--color-marine)', fontWeight: 500, whiteSpace: 'nowrap' }}>
+          Showing: <span style={{ color: 'var(--color-harbor)', fontWeight: 700 }}>{filteredUsers.length}</span> / {users.length}
         </div>
       </div>
 

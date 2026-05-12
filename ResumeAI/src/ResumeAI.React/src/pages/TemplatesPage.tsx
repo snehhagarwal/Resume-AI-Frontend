@@ -16,9 +16,15 @@ export default function TemplatesPage() {
   const [selected,  setSelected]  = useState<Template | null>(null)
   const [preview,   setPreview]   = useState<TemplatePreview | null>(null)
   const [tab,       setTab]       = useState<'all' | 'free' | 'premium' | 'popular' | TemplateCategory>('all')
+  const [search,    setSearch]    = useState('')
   const [loading,   setLoading]   = useState(false)
   const [prevLoading, setPrevLoad] = useState(false)
   const [err,       setErr]       = useState('')
+
+  const filteredTemplates = templates.filter(t => 
+    t.name.toLowerCase().includes(search.toLowerCase()) ||
+    t.category.toLowerCase().includes(search.toLowerCase())
+  )
 
   const load = async (t: typeof tab) => {
     setLoading(true); setTab(t); setErr('')
@@ -72,26 +78,49 @@ export default function TemplatesPage() {
         marginBottom: '3.5rem',
         border: '1.5px solid var(--color-frost)'
       }}>
-        <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', marginBottom: '1.5rem', borderBottom: '1.5px solid var(--color-frost)', paddingBottom: '1.5rem' }}>
-          {(['all', 'free', 'premium', 'popular'] as const).map(t => (
-            <button 
-              key={t} 
+        <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap', marginBottom: '1.5rem', borderBottom: '1.5px solid var(--color-frost)', paddingBottom: '1.5rem', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', gap: '0.75rem' }}>
+            {(['all', 'free', 'premium', 'popular'] as const).map(t => (
+              <button 
+                key={t} 
+                style={{
+                  background: tab === t ? 'var(--color-harbor)' : 'transparent',
+                  color: tab === t ? 'white' : 'var(--color-marine)',
+                  padding: '0.75rem 1.5rem',
+                  borderRadius: '12px',
+                  border: 'none',
+                  fontWeight: 700,
+                  fontSize: '0.9rem',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }} 
+                onClick={() => load(t)}
+              >
+                {t.charAt(0).toUpperCase() + t.slice(1)}
+              </button>
+            ))}
+          </div>
+
+          <div style={{ position: 'relative', width: '300px' }}>
+            <input 
+              type="text" 
+              placeholder="Search templates..." 
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
               style={{
-                background: tab === t ? 'var(--color-harbor)' : 'transparent',
-                color: tab === t ? 'white' : 'var(--color-marine)',
-                padding: '0.75rem 1.5rem',
+                width: '100%',
+                padding: '0.75rem 1rem',
                 borderRadius: '12px',
-                border: 'none',
-                fontWeight: 700,
+                border: '1.5px solid var(--color-frost)',
                 fontSize: '0.9rem',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease'
-              }} 
-              onClick={() => load(t)}
-            >
-              {t.charAt(0).toUpperCase() + t.slice(1)}
-            </button>
-          ))}
+                fontWeight: 600,
+                outline: 'none',
+                transition: 'border-color 0.2s'
+              }}
+              onFocus={(e) => e.target.style.borderColor = 'var(--color-glacier)'}
+              onBlur={(e) => e.target.style.borderColor = 'var(--color-frost)'}
+            />
+          </div>
         </div>
 
         <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'center' }}>
@@ -132,7 +161,7 @@ export default function TemplatesPage() {
              <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '4rem', color: 'var(--color-marine)' }}>
                <div style={{ fontSize: '1.2rem', fontWeight: 600 }}>Loading collection...</div>
              </div>
-          ) : templates.map(t => (
+          ) : filteredTemplates.map(t => (
             <TemplateCard
               key={t.templateId}
               template={t}
@@ -140,10 +169,10 @@ export default function TemplatesPage() {
               onClick={() => selectTemplate(t)}
             />
           ))}
-          {!loading && templates.length === 0 && (
+          {!loading && filteredTemplates.length === 0 && (
             <div style={{ color: 'var(--color-marine)', gridColumn: '1/-1', textAlign: 'center', padding: '6rem', background: 'white', borderRadius: '24px', border: '1.5px dashed var(--color-frost)' }}>
-              <div style={{ fontSize: '1.1rem', fontWeight: 600 }}>No templates found in this category.</div>
-              <button style={{ ...linkButtonStyle, marginTop: '1rem' }} onClick={() => load('all')}>View All Templates</button>
+              <div style={{ fontSize: '1.1rem', fontWeight: 600 }}>No templates found matching "{search}".</div>
+              <button style={{ ...linkButtonStyle, marginTop: '1rem' }} onClick={() => { setSearch(''); load('all') }}>Clear Search</button>
             </div>
           )}
         </div>

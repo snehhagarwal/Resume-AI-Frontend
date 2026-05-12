@@ -11,6 +11,7 @@ export default function ExportsPage() {
   const [filter,   setFilter]   = useState<Filter>('all')
   const [err,      setErr]      = useState('')
   const [busy,     setBusy]     = useState(false)
+  const [search,   setSearch]   = useState('')
 
   const run = async <T,>(fn: () => Promise<T>): Promise<T | null> => {
     setErr(''); setBusy(true)
@@ -40,7 +41,11 @@ export default function ExportsPage() {
     setExports(prev => prev.filter(e => e.jobId !== jobId))
   })
 
-  const visible = filter === 'all' ? exports : exports.filter(e => e.format === filter)
+  const visible = exports.filter(e => {
+    const matchesFilter = filter === 'all' || e.format === filter
+    const matchesSearch = search === '' || e.resumeId.toString().includes(search) || e.jobId.toLowerCase().includes(search.toLowerCase())
+    return matchesFilter && matchesSearch
+  })
 
   const fmtColor = (f: string) => {
     switch (f) {
@@ -100,27 +105,47 @@ export default function ExportsPage() {
       )}
 
       {/* Navigation & Filters */}
-      <div style={{ display: 'flex', gap: '1rem', marginBottom: '2.5rem', background: 'white', padding: '0.5rem', borderRadius: '16px', border: '1.5px solid var(--color-frost)', width: 'fit-content' }}>
-        {(['all', 'PDF', 'DOCX', 'JSON'] as Filter[]).map(f => (
-          <button 
-            key={f} 
+      <div style={{ display: 'flex', gap: '1.5rem', marginBottom: '2.5rem', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', gap: '0.75rem', background: 'white', padding: '0.4rem', borderRadius: '16px', border: '1.5px solid var(--color-frost)', width: 'fit-content' }}>
+          {(['all', 'PDF', 'DOCX', 'JSON'] as Filter[]).map(f => (
+            <button 
+              key={f} 
+              style={{
+                ...tabBtn(filter === f),
+                padding: '0.6rem 1.5rem',
+                borderRadius: '12px',
+                border: 'none',
+                background: filter === f ? 'var(--color-harbor)' : 'transparent',
+                color: filter === f ? 'white' : 'var(--color-marine)',
+                fontWeight: 700,
+                fontSize: '0.85rem',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease'
+              }} 
+              onClick={() => setFilter(f)}
+            >
+              {f === 'all' ? 'All Formats' : f}
+            </button>
+          ))}
+        </div>
+
+        <div style={{ position: 'relative', width: '300px' }}>
+          <input 
+            type="text" 
+            placeholder="Search by Resume ID or Job ID..." 
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
             style={{
-              ...tabBtn(filter === f),
-              padding: '0.6rem 1.5rem',
+              width: '100%',
+              padding: '0.75rem 1rem',
               borderRadius: '12px',
-              border: 'none',
-              background: filter === f ? 'var(--color-harbor)' : 'transparent',
-              color: filter === f ? 'white' : 'var(--color-marine)',
-              fontWeight: 700,
-              fontSize: '0.85rem',
-              cursor: 'pointer',
-              transition: 'all 0.2s ease'
-            }} 
-            onClick={() => setFilter(f)}
-          >
-            {f === 'all' ? 'All Formats' : f}
-          </button>
-        ))}
+              border: '1.5px solid var(--color-frost)',
+              fontSize: '0.9rem',
+              fontWeight: 600,
+              outline: 'none'
+            }}
+          />
+        </div>
       </div>
 
       {/* Export Items Grid */}

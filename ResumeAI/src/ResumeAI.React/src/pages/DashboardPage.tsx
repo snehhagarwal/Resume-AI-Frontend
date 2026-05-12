@@ -1,8 +1,8 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { aiApi, resumeApi, exportApi, jobMatchApi } from '../api'
-import type { Resume, AiRequest, AiQuota, ExportJob, JobMatch } from '../types'
+import { aiApi, resumeApi, sectionApi, exportApi, jobMatchApi } from '../api'
+import type { Resume, Section, AiRequest, AiQuota, ExportJob, JobMatch } from '../types'
 import { card, btn, C, errBox, pill } from '../styles'
 
 export default function DashboardPage() {
@@ -16,6 +16,16 @@ export default function DashboardPage() {
   const [matches, setMatches] = useState<JobMatch[]>([])
   const [err, setErr] = useState('')
   const [loading, setLoading] = useState(true)
+  const [search, setSearch] = useState('')
+  const [filter, setFilter] = useState<'ALL' | 'PUBLIC' | 'PRIVATE'>('ALL')
+
+  const filteredResumes = resumes.filter(r => {
+    const matchesSearch = r.title.toLowerCase().includes(search.toLowerCase())
+    const matchesFilter = filter === 'ALL' || 
+                         (filter === 'PUBLIC' && r.isPublic) || 
+                         (filter === 'PRIVATE' && !r.isPublic)
+    return matchesSearch && matchesFilter
+  })
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -123,15 +133,61 @@ export default function DashboardPage() {
         <section style={dashboardCardStyle}>
           <div style={cardHeaderStyle}>
             <h3 style={cardTitleStyle}>My Resumes</h3>
-            <span style={{ fontSize: '0.85rem', color: 'var(--color-marine)' }}>{resumes.length} Total</span>
+            <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+              <div style={{ position: 'relative' }}>
+                <input 
+                  type="text" 
+                  placeholder="Search..." 
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  style={{
+                    padding: '0.5rem 0.75rem',
+                    borderRadius: '10px',
+                    border: '1.5px solid var(--color-frost)',
+                    fontSize: '0.8rem',
+                    fontWeight: 600,
+                    outline: 'none',
+                    width: '180px'
+                  }}
+                />
+              </div>
+              <select 
+                value={filter}
+                onChange={(e) => setFilter(e.target.value as any)}
+                style={{
+                  padding: '0.5rem 2rem 0.5rem 0.75rem',
+                  borderRadius: '10px',
+                  border: '1.5px solid var(--color-frost)',
+                  fontSize: '0.8rem',
+                  fontWeight: 600,
+                  outline: 'none',
+                  background: 'white',
+                  cursor: 'pointer'
+                }}
+              >
+                <option value="ALL">All Visibility</option>
+                <option value="PUBLIC">Public Only</option>
+                <option value="PRIVATE">Private Only</option>
+              </select>
+            </div>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             {loading ? (
               <p style={emptyStateStyle}>Loading resumes...</p>
-            ) : resumes.length === 0 ? (
-              <p style={emptyStateStyle}>You haven't created any resumes yet.</p>
+            ) : filteredResumes.length === 0 ? (
+              <div style={{...emptyStateStyle, background: 'var(--color-frost)', borderRadius: '16px'}}>
+                <p style={{ margin: 0 }}>No resumes found matching your criteria.</p>
+                {(search || filter !== 'ALL') && (
+                  <button 
+                    style={{ ...linkButtonStyle, marginTop: '0.5rem' }} 
+                    onClick={() => { setSearch(''); setFilter('ALL') }}
+                  >
+                    Clear filters
+                  </button>
+                )}
+              </div>
             ) : (
-              resumes.slice(0, 5).map(r => (
+              filteredResumes.slice(0, 5).map(r => (
                 <div 
                   key={r.resumeId} 
                   style={listItemStyle}
@@ -145,16 +201,16 @@ export default function DashboardPage() {
                       Target: {r.targetJobTitle || 'Not specified'} · {r.isPublic ? 'Public' : 'Private'}
                     </div>
                   </div>
-                  <div style={{ 
-                    textAlign: 'right',
-                    padding: '0.5rem 0.75rem',
-                    borderRadius: '10px',
-                    background: r.atsScore >= 80 ? '#ecfdf5' : r.atsScore >= 60 ? '#fffbeb' : '#fef2f2',
-                    color: r.atsScore >= 80 ? '#059669' : r.atsScore >= 60 ? '#d97706' : '#dc2626',
-                    fontWeight: 800,
-                    fontSize: '0.9rem'
-                  }}>
-                    {r.atsScore}% <span style={{ fontSize: '0.65rem', display: 'block', fontWeight: 600 }}>ATS</span>
+                    <div style={{ 
+                      textAlign: 'right',
+                      padding: '0.5rem 0.75rem',
+                      borderRadius: '10px',
+                      background: r.atsScore >= 80 ? '#ecfdf5' : r.atsScore >= 60 ? '#fffbeb' : '#fef2f2',
+                      color: r.atsScore >= 80 ? '#059669' : r.atsScore >= 60 ? '#d97706' : '#dc2626',
+                      fontWeight: 800,
+                      fontSize: '0.9rem'
+                    }}>
+                      {r.atsScore}% <span style={{ fontSize: '0.65rem', display: 'block', fontWeight: 600 }}>ATS</span>
                   </div>
                 </div>
               ))
