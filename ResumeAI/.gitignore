@@ -22,3 +22,8 @@ TestResults/
 
 # IDEs
 .idea/
+
+# Frontend Testing
+src/ResumeAI.React/src/Frontend.test.tsx
+src/ResumeAI.React/src/test/
+src/ResumeAI.React/coverage/
